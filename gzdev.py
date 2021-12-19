@@ -14,15 +14,12 @@ HEADERS = {'Authorization': 'Bearer {}'.format(GZ_TOKEN), 'Content-type': 'appli
 FILE = str(datetime.datetime.today().strftime("%Y-%m-%d-%H.%M.%S")) + '.csv'
 
 
-
-
 async def getLots(name_ru = 'дезин', date_down="2021-12-06", date_up=str(datetime.date.today()), LotStatus=240):
     transport = AIOHTTPTransport(url="https://ows.goszakup.gov.kz/v3/graphql", headers=HEADERS)
     client = Client(transport=transport, fetch_schema_from_transport=True)
     name_ru = '?' + name_ru
     after = 0
     all_result = []
-    print('pppppppppppppppppppppppppppppppppppppppppppppppppp')
     while True:
         time.sleep(0.1)
         params = {"nameRu": name_ru, "after": after, "date_down": date_down, "date_up": date_up,
@@ -54,31 +51,33 @@ async def getLots(name_ru = 'дезин', date_down="2021-12-06", date_up=str(da
     # print(all_result)
     lots_dict = {}
 
-
     for item in all_result:
-        lots_dict[item['id']] = {'lotNumber': item['lotNumber'],'count': item['count'], 'amount': item['amount'], 'nameRu': item['nameRu'],
-                                 'descriptionRu': item['descriptionRu'], 'customerNameRu':item['customerNameRu'],
+        lots_dict[item['id']] = {'lotNumber': item['lotNumber'], 'count': item['count'], 'amount': item['amount'],
+                                 'nameRu': item['nameRu'], 'descriptionRu': item['descriptionRu'],
+                                 'customerNameRu': item['customerNameRu'],
                                  'RefLotsStatus': item['RefLotsStatus']['nameRu'], 'trdBuyId': item['trdBuyId']}
-        # print(item['lotNumber'])
 
-
-    print(' --------------------------------------')
-    # print(lots_dict)
-    fieldnames = ['lotNumber', 'count', 'amount', 'nameRu', 'descriptionRu', 'customerNameRu', 'RefLotsStatus', 'trdBuyId', 'link']
-    if len(lots_dict) >10:
+    fieldnames = ['lotNumber', 'count', 'amount', 'nameRu', 'descriptionRu', 'customerNameRu', 'RefLotsStatus',
+                  'trdBuyId', 'link']
+    if len(lots_dict) > 10:
         file_link = 'csv/result' + str(datetime.datetime.today().strftime("%Y-%m-%d-%H.%M.%S")) + '.csv'
         with open(file_link, 'w', encoding="utf-8") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             for x, y in lots_dict.items():
-                y['link'] = 'https://goszakup.gov.kz/ru/announce/index/{trdBuyId}?tab=lots'.format(trdBuyId=y['trdBuyId'])
+                y['link'] = 'https://goszakup.gov.kz/ru/announce/index/{trdBuyId}?tab=lots'\
+                    .format(trdBuyId=y['trdBuyId'])
                 writer.writerow(y)
         return file_link
 
-    else: return lots_dict
+    else:
+        return lots_dict
 
 async def parseLots(item):
-    text = "Номер лота: {lotNumber}\nКоличество: {count}\nСумма: {amount}\nНаименование: {nameRu}\nОписание: {descriptionRu}\nЗаказчик: {customerNameRu}\nСтатус лота: {RefLotsStatus}\nСсылка на объявление: https://goszakup.gov.kz/ru/announce/index/{trdBuyId}?tab=lots".format(lotNumber=item['lotNumber'], count=item['count'], amount=item['amount'], nameRu=item['nameRu'],
+    text = "Номер лота: {lotNumber}\nКоличество: {count}\nСумма: {amount}\nНаименование: {nameRu}\n" \
+           "Описание: {descriptionRu}\nЗаказчик: {customerNameRu}\nСтатус лота: {RefLotsStatus}\n" \
+           "Ссылка на объявление: https://goszakup.gov.kz/ru/announce/index/{trdBuyId}?tab=lots"\
+        .format(lotNumber=item['lotNumber'], count=item['count'], amount=item['amount'], nameRu=item['nameRu'],
                    descriptionRu=item['descriptionRu'], customerNameRu=item['customerNameRu'],
                    RefLotsStatus=item['RefLotsStatus'], trdBuyId=item['trdBuyId'])
     return text
@@ -124,8 +123,8 @@ async def getTrds(date_down="2021-01-01", date_up="2021-03-31", name_ru='дез�
         after = result["TrdBuy"][-1]["id"]
         print(after)
 
-        stop_signal+=1
-        if stop_signal%100 == 0:
+        stop_signal += 1
+        if stop_signal % 100 == 0:
 
             print("Найдено ", stop_signal*10, " строк")
             all_result = []
